@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy text-white font-sans antialiased;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-cyan hover:bg-cyan-dark text-navy font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-input transition-all duration-300 hover:shadow-cyan-glow text-sm sm:text-base;
+  }
+  
+  .btn-secondary {
+    @apply bg-navy-light hover:bg-navy-lighter text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-input transition-all duration-300 border border-cyan/30 text-sm sm:text-base;
+  }
+  
+  .card {
+    @apply bg-navy-light rounded-card p-4 sm:p-6 border border-navy-lighter shadow-lg transition-all duration-300 hover:border-cyan/30;
+  }
+  
+  .input {
+    @apply bg-navy-lighter border border-navy-lighter rounded-input px-3 sm:px-4 py-2.5 sm:py-3 text-white placeholder-gray-400 focus:outline-none focus:border-cyan transition-all duration-300 text-sm sm:text-base;
+  }
+  
+  .badge {
+    @apply px-2 sm:px-3 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-emerald/20 text-emerald border border-emerald/30;
+  }
+  
+  .badge-warning {
+    @apply badge bg-amber/20 text-amber border border-amber/30;
+  }
+  
+  .badge-error {
+    @apply badge bg-crimson/20 text-crimson border border-crimson/30;
+  }
+  
+  .badge-info {
+    @apply badge bg-cyan/20 text-cyan border border-cyan/30;
+  }
+}

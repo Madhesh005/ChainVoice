@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "Invoice Financing Registry API",
+    "description": "Complete invoice lifecycle management with atomic locking",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Test Database",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/test-db",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["test-db"]
+        }
+      }
+    },
+    {
+      "name": "2. Fetch Invoice from Odoo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/invoice/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["invoice", "1"]
+        }
+      }
+    },
+    {
+      "name": "3. Verify Invoice Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/verify/{{invoice_hash}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["verify", "{{invoice_hash}}"]
+        }
+      }
+    },
+    {
+      "name": "4. Lock Invoice",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_hash\": \"{{invoice_hash}}\",\n  \"lender_id\": \"BANK_A\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/lock",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["lock"]
+        }
+      }
+    },
+    {
+      "name": "5. Finance Invoice",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_hash\": \"{{invoice_hash}}\",\n  \"lender_id\": \"BANK_A\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/finance",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["finance"]
+        }
+      }
+    },
+    {
+      "name": "6. Close Invoice",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_hash\": \"{{invoice_hash}}\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/close",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["close"]
+        }
+      }
+    },
+    {
+      "name": "7. Unlock Invoice",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_hash\": \"{{invoice_hash}}\",\n  \"lender_id\": \"BANK_A\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/unlock",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["unlock"]
+        }
+      }
+    },
+    {
+      "name": "Test: Try Lock by Different Bank (Should Fail)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_hash\": \"{{invoice_hash}}\",\n  \"lender_id\": \"BANK_B\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/lock",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["lock"]
+        }
+      }
+    },
+    {
+      "name": "Test: Try Finance by Wrong Bank (Should Fail)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_hash\": \"{{invoice_hash}}\",\n  \"lender_id\": \"BANK_B\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/finance",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["finance"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "invoice_hash",
+      "value": "paste_hash_here",
+      "type": "string"
+    }
+  ]
+}

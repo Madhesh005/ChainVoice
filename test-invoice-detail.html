@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Detail Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .invoice-card { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .blockchain-info { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .loading { color: #666; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Invoice Detail Test</h1>
+        <p>Testing the resilient invoice detail API that works even when blockchain is down.</p>
+        
+        <div>
+            <label for="invoiceId">Invoice Database ID:</label>
+            <input type="number" id="invoiceId" value="53" />
+            <button class="btn-primary" onclick="loadInvoice()">Load Invoice</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">Loading invoice details...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="invoiceDetails" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function loadInvoice() {
+            const invoiceId = document.getElementById('invoiceId').value;
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const detailsEl = document.getElementById('invoiceDetails');
+
+            // Reset UI
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            detailsEl.style.display = 'none';
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/invoices/${invoiceId}`);
+                const data = await response.json();
+
+                loadingEl.style.display = 'none';
+
+                if (data.success) {
+                    displayInvoice(data.data);
+                } else {
+                    showError(data.error || 'Failed to load invoice');
+                }
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        function displayInvoice(data) {
+            const { invoice, blockchain } = data;
+            const detailsEl = document.getElementById('invoiceDetails');
+
+            const blockchainStatusClass = getBlockchainStatusClass(blockchain.status);
+            const blockchainStatusText = getBlockchainStatusText(blockchain.status, blockchain.verified);
+
+            detailsEl.innerHTML = `
+                <div class="invoice-card">
+                    <h2>Invoice: ${invoice.invoice_number}</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h3>Invoice Details</h3>
+                            <p><strong>ID:</strong> ${invoice.id}</p>
+                            <p><strong>ERP ID:</strong> ${invoice.erp_invoice_id || 'N/A'}</p>
+                            <p><strong>Date:</strong> ${new Date(invoice.invoice_date).toLocaleDateString()}</p>
+                            <p><strong>Amount:</strong> ₹${parseFloat(invoice.amount).toLocaleString()}</p>
+                            <p><strong>Status:</strong> <span class="status success">${invoice.status}</span></p>
+                            <p><strong>Buyer:</strong> ${invoice.buyer_name}</p>
+                            <p><strong>Seller:</strong> ${invoice.seller_name}</p>
+                        </div>
+                        
+                        <div>
+                            <h3>Blockchain Status</h3>
+                            <div class="blockchain-info">
+                                <p><strong>Status:</strong> <span class="status ${blockchainStatusClass}">${blockchainStatusText}</span></p>
+                                <p><strong>Verified:</strong> ${blockchain.verified ? '✅ Yes' : '❌ No'}</p>
+                                <p><strong>GIID:</strong> ${invoice.giid || 'Not registered'}</p>
+                                ${blockchain.error ? `<p><strong>Error:</strong> <span class="error">${blockchain.error}</span></p>` : ''}
+                            </div>
+                            
+                            ${!blockchain.verified && invoice.giid ? `
+                                <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                                    <strong>⚠️ Re-registration Required</strong><br>
+                                    This invoice was previously registered but is no longer found on the blockchain.
+                                    <br><button class="btn-primary" style="margin-top: 10px;">Re-register on Blockchain</button>
+                                </div>
+                            ` : ''}
+                            
+                            ${!invoice.giid ? `
+                                <button class="btn-primary" style="margin-top: 10px;">Register on Blockchain</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            detailsEl.style.display = 'block';
+        }
+
+        function getBlockchainStatusClass(status) {
+            switch (status) {
+                case 'AVAILABLE': return 'success';
+                case 'NOT_REGISTERED': return 'warning';
+                case 'NOT_FOUND_ON_BLOCKCHAIN': return 'warning';
+                case 'BLOCKCHAIN_ERROR': return 'error';
+                default: return 'warning';
+            }
+        }
+
+        function getBlockchainStatusText(status, verified) {
+            if (!verified) {
+                switch (status) {
+                    case 'NOT_REGISTERED': return '🔄 Not Registered';
+                    case 'NOT_FOUND_ON_BLOCKCHAIN': return '⚠️ Missing from Blockchain';
+                    case 'BLOCKCHAIN_ERROR': return '❌ Blockchain Error';
+                    default: return '❓ Unknown';
+                }
+            }
+            
+            switch (status) {
+                case 'AVAILABLE': return '🟢 Available for Financing';
+                case 'LOCKED': return '🟡 Locked';
+                case 'FINANCED': return '🔵 Financed';
+                case 'CLOSED': return '⚫ Closed';
+                default: return status;
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Load invoice on page load
+        window.onload = () => loadInvoice();
+    </script>
+</body>
+</html>
