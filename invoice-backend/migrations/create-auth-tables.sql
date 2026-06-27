@@ -136,7 +136,7 @@ BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Triggers for MSME users
 DROP TRIGGER IF EXISTS update_msme_users_updated_at ON msme_users;

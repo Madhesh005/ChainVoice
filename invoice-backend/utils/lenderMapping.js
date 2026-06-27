@@ -24,6 +24,11 @@ function mapEmailToLenderIdentifier(email) {
     'shriram@gmail.com': 'SHRIRAM_FINANCE',
     'muthoot@gmail.com': 'MUTHOOT_FINANCE',
     
+    // Simple test emails (for easy testing)
+    'hdfc@test.com': 'HDFC_BANK',
+    'axis@test.com': 'AXIS_BANK',
+    'bajaj@test.com': 'BAJAJ_FINSERV',
+    
     // Additional test patterns
     'lender1772984404321@bank.com': 'HDFC_BANK', // Default test lender to HDFC
   };

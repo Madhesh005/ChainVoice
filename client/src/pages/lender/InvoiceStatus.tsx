@@ -8,13 +8,12 @@ interface InvoiceData {
   giid: string;
   invoice_number: string;
   buyer_name: string;
-  seller_name: string;
   seller_gstin: string;
   amount: number;
   currency: string;
   issue_date: string;
   due_date: string;
-  ipfs_cid: string;
+  ipfs_hash: string;
   document_hash: string;
   blockchain_tx_hash: string;
   blockchain_timestamp: string;
@@ -77,13 +76,13 @@ export default function InvoiceStatus() {
   };
 
   const handleDownloadPDF = () => {
-    if (!invoice?.ipfs_cid) {
+    if (!invoice?.ipfs_hash) {
       setError('IPFS document not available');
       return;
     }
 
     try {
-      const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${invoice.ipfs_cid}`;
+      const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${invoice.ipfs_hash}`;
       window.open(ipfsUrl, '_blank');
     } catch (err) {
       setError('Unable to load document from IPFS');
@@ -276,7 +275,7 @@ export default function InvoiceStatus() {
                 <div className="border border-navy-lighter rounded-lg p-8 text-center">
                   <div className="text-6xl mb-4">📄</div>
                   <p className="text-gray-400 mb-4">{invoice.invoice_number}.pdf</p>
-                  {invoice.ipfs_cid ? (
+                  {invoice.ipfs_hash ? (
                     <button 
                       onClick={handleDownloadPDF}
                       className="btn-secondary"
@@ -380,9 +379,9 @@ export default function InvoiceStatus() {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-emerald">Document Stored on IPFS</p>
                     <p className="text-xs text-gray-400 mt-1">Decentralized storage ensures immutability</p>
-                    {invoice.ipfs_cid && (
+                    {invoice.ipfs_hash && (
                       <p className="text-xs text-gray-500 font-mono mt-1 break-all">
-                        CID: {invoice.ipfs_cid.substring(0, 20)}...
+                        CID: {invoice.ipfs_hash.substring(0, 20)}...
                       </p>
                     )}
                   </div>

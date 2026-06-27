@@ -13,15 +13,20 @@ interface DashboardStats {
 }
 
 interface Invoice {
-  id: number;
+  request_id: number;
+  request_status: string;
+  request_date: string;
+  lender_id: string;
+  invoice_id: number;
   invoice_number: string;
   buyer_name: string;
-  seller_name: string;
+  seller_gstin: string;
   amount: number;
-  currency: string;
-  invoice_date: string;
-  msme_company_name: string;
+  giid: string;
+  ipfs_hash: string;
+  document_hash: string;
   blockchain_status: string;
+  msme_company_name: string;
 }
 
 interface Activity {
@@ -49,10 +54,6 @@ export default function LenderDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Get lender identifier from authenticated user
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const lenderIdentifier = user.lender_identifier || 'HDFC_BANK'; // Fallback for development
-
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -62,11 +63,11 @@ export default function LenderDashboard() {
       setLoading(true);
       setError('');
 
-      // Fetch all data in parallel
+      // Fetch all data in parallel - no lenderIdentifier needed (uses authenticated user)
       const [statsResponse, invoicesResponse, activityResponse] = await Promise.all([
-        getLenderDashboardStats(lenderIdentifier),
-        getLenderPendingInvoices(lenderIdentifier, 5),
-        getLenderActivity(lenderIdentifier, 5),
+        getLenderDashboardStats(),
+        getLenderPendingInvoices(5),
+        getLenderActivity(5),
       ]);
 
       if (statsResponse.success) {
@@ -78,7 +79,10 @@ export default function LenderDashboard() {
 
       if (invoicesResponse.success) {
         console.log('📋 Invoices response:', invoicesResponse);
-        setPendingInvoices(invoicesResponse.invoices || []);
+        // Filter only PENDING status invoices for the dashboard
+        const allInvoices = invoicesResponse.invoices || [];
+        const pending = allInvoices.filter((inv: any) => inv.request_status === 'PENDING');
+        setPendingInvoices(pending.slice(0, 5)); // Limit to 5 for dashboard
       } else {
         console.error('❌ Invoices response failed:', invoicesResponse);
       }
@@ -173,22 +177,22 @@ export default function LenderDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             title="Pending Verification" 
-            value={stats?.pending_verification.toString() || '0'} 
+            value={(stats?.pending_verification ?? 0).toString()} 
             icon="⏳" 
           />
           <StatCard 
             title="Active Financing" 
-            value={formatAmount(stats?.active_financing || 0)} 
+            value={formatAmount(stats?.active_financing ?? 0)} 
             icon="💰" 
           />
           <StatCard 
             title="Portfolio Size" 
-            value={stats?.portfolio_size.toString() || '0'} 
+            value={(stats?.portfolio_size ?? 0).toString()} 
             icon="📊" 
           />
           <StatCard 
             title="Default Rate" 
-            value={`${stats?.default_rate?.toFixed(2) || '0.00'}%`} 
+            value={`${(stats?.default_rate ?? 0).toFixed(2)}%`} 
             icon="⚠️" 
             trend={stats && stats.default_rate < 1 ? 'down' : undefined}
           />
@@ -213,9 +217,9 @@ export default function LenderDashboard() {
                 <div className="space-y-3">
                   {pendingInvoices.map((invoice) => (
                     <div 
-                      key={invoice.id} 
+                      key={invoice.request_id} 
                       className="flex justify-between items-center p-3 bg-navy rounded-lg hover:bg-navy-lighter transition-colors cursor-pointer"
-                      onClick={() => navigate(`/lender/verify/${invoice.giid || invoice.id}`)}
+                      onClick={() => navigate(`/lender/verify/${invoice.giid}`)}
                     >
                       <div>
                         <p className="font-mono font-medium">{invoice.invoice_number}</p>
@@ -223,7 +227,7 @@ export default function LenderDashboard() {
                         <p className="text-xs text-gray-500">Buyer: {invoice.buyer_name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-mono font-bold">{formatAmount(invoice.amount, invoice.currency)}</p>
+                        <p className="font-mono font-bold">{formatAmount(invoice.amount, 'INR')}</p>
                         <span className="badge-warning text-xs">Pending</span>
                       </div>
                     </div>

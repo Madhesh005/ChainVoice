@@ -15,21 +15,18 @@ const useFabric = process.env.USE_FABRIC === 'true' || ledgerType === 'fabric';
 
 let ledgerImplementation;
 if (useFabric) {
-  console.log('🔗 Using Hyperledger Fabric ledger');
-  try {
-    const FabricLedger = require('../fabricLedger');
-    ledgerImplementation = new FabricLedger({
-      channelName: process.env.FABRIC_CHANNEL || 'mychannel',
-      chaincodeName: process.env.FABRIC_CHAINCODE || 'invoicecc',
-      userId: process.env.FABRIC_USER || 'appUser',
-      orgMSP: process.env.FABRIC_ORG_MSP || 'Org1MSP'
-    });
-  } catch (error) {
-    console.error('❌ Failed to load Fabric modules:', error.message);
-    console.log('💡 Install Fabric dependencies: npm install fabric-network fabric-ca-client');
-    console.log('🔄 Falling back to PostgreSQL ledger');
-    ledgerImplementation = new PostgresLedger();
-  }
+  console.log('🔗 Using Hyperledger Fabric ledger (via blockchain module)');
+  const FabricLedgerAdapter = require('../fabricLedgerAdapter');
+  ledgerImplementation = new FabricLedgerAdapter({
+    channelName: process.env.FABRIC_CHANNEL || 'mychannel',
+    chaincodeName: process.env.FABRIC_CHAINCODE || 'invoicecc',
+    userId: process.env.FABRIC_USER || 'appUser',
+    orgMSP: process.env.FABRIC_ORG_MSP || 'Org1MSP'
+  });
+  console.log('   ✅ Using independent blockchain module at ../blockchain/');
+  console.log('   ✅ Single Gateway connection (no duplicate Fabric clients)');
+  console.log('   ✅ Wallet: blockchain/wallet/');
+  console.log('   ✅ Connection Profile: blockchain/connection-org1.json');
 } else {
   console.log('🗄️  Using PostgreSQL ledger');
   ledgerImplementation = new PostgresLedger();

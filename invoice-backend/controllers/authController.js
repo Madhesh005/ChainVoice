@@ -67,7 +67,8 @@ class AuthController {
         message: 'Lender registered successfully',
         data: {
           id: user.id,
-          institution_name: user.institution_name,
+          lender_name: user.lender_name,
+          lender_type: user.lender_type,
           contact_person: user.contact_person,
           email: user.email,
           phone: user.phone,
@@ -98,7 +99,8 @@ class AuthController {
         token: result.token,
         user: {
           id: result.user.id,
-          institution_name: result.user.institution_name,
+          lender_name: result.user.lender_name,
+          lender_type: result.user.lender_type,
           email: result.user.email,
           role: 'lender'
         }

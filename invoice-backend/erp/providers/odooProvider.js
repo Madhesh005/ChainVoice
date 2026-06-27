@@ -281,7 +281,7 @@ class OdooProvider {
    * @returns {Buffer} PDF buffer
    */
   async downloadInvoicePDF(invoiceId) {
-    const DocumentService = require('../../services/documentService');
+    const { DocumentService } = require('../../services/documentService');
     const documentService = new DocumentService({
       baseUrl: this.baseUrl,
       database: this.database,

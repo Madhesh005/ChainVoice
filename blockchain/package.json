@@ -1,0 +1,33 @@
+{
+  "name": "invoice-blockchain-module",
+  "version": "1.0.0",
+  "description": "Independent Hyperledger Fabric blockchain module for invoice financing",
+  "main": "fabricService.js",
+  "scripts": {
+    "enroll:admin": "node enrollAdmin.js",
+    "register:user": "node registerUser.js",
+    "test:connection": "node testConnection.js",
+    "health:check": "node healthCheck.js",
+    "clean:wallet": "node scripts/cleanWallet.js",
+    "setup": "npm run enroll:admin && npm run register:user",
+    "test": "npm run health:check && npm run test:connection"
+  },
+  "keywords": [
+    "hyperledger",
+    "fabric",
+    "blockchain",
+    "invoice",
+    "financing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "fabric-network": "2.2.20",
+    "fabric-ca-client": "2.2.20"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

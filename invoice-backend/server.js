@@ -33,6 +33,7 @@ const erpRoutes = require('./routes/erpRoutes');
 const msmeRoutes = require('./routes/msmeRoutes');
 const financingRoutes = require('./routes/financingRoutes');
 const lenderRoutes = require('./routes/lenderRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
 // Mount routes
@@ -41,6 +42,7 @@ app.use('/api/erp', erpRoutes);
 app.use('/api/msme', msmeRoutes);
 app.use('/api/financing', financingRoutes);
 app.use('/api/lender', lenderRoutes);
+app.use('/api/lender/portfolio', portfolioRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Add a direct route for invoice details (alternative to ERP route)

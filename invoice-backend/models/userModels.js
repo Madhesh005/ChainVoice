@@ -50,13 +50,13 @@ class UserModels {
    * Create Lender user
    */
   async createLenderUser(userData) {
-    const { institution_name, contact_person, email, phone, license_number, password_hash } = userData;
+    const { lender_name, lender_type, contact_person, email, phone, license_number, password_hash } = userData;
     
     const result = await db.query(
-      `INSERT INTO lender_users (institution_name, contact_person, email, phone, license_number, password_hash)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, institution_name, contact_person, email, phone, license_number, created_at`,
-      [institution_name, contact_person, email, phone, license_number, password_hash]
+      `INSERT INTO lender_users (lender_name, lender_type, contact_person, email, phone, license_number, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, lender_name, lender_type, contact_person, email, phone, license_number, created_at`,
+      [lender_name, lender_type || 'BANK', contact_person, email, phone, license_number, password_hash]
     );
     
     return result.rows[0];
@@ -79,7 +79,7 @@ class UserModels {
    */
   async findLenderById(id) {
     const result = await db.query(
-      'SELECT id, institution_name, contact_person, email, phone, license_number, created_at FROM lender_users WHERE id = $1',
+      'SELECT id, lender_name, lender_type, contact_person, email, phone, license_number, created_at FROM lender_users WHERE id = $1',
       [id]
     );
     

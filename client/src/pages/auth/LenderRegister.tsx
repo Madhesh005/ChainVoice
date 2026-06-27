@@ -11,7 +11,8 @@ export default function LenderRegister() {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    institution_name: '',
+    lender_name: '',
+    lender_type: 'BANK',
     contact_person: '',
     email: '',
     phone: '',
@@ -49,7 +50,8 @@ export default function LenderRegister() {
 
     try {
       const response = await registerLender({
-        institution_name: formData.institution_name,
+        lender_name: formData.lender_name,
+        lender_type: formData.lender_type,
         contact_person: formData.contact_person,
         email: formData.email,
         phone: formData.phone,
@@ -118,13 +120,29 @@ export default function LenderRegister() {
               <label className="block text-sm font-medium mb-2">Institution Name *</label>
               <input 
                 type="text" 
-                name="institution_name"
+                name="lender_name"
                 className="input w-full" 
                 placeholder="ABC Financial Services Ltd." 
-                value={formData.institution_name}
+                value={formData.lender_name}
                 onChange={handleChange}
                 required 
               />
+            </div>
+
+            {/* Institution Type */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Institution Type *</label>
+              <select
+                name="lender_type"
+                className="input w-full"
+                value={formData.lender_type}
+                onChange={(e) => setFormData({ ...formData, lender_type: e.target.value })}
+                required
+              >
+                <option value="BANK">Bank</option>
+                <option value="NBFC">NBFC (Non-Banking Financial Company)</option>
+                <option value="FINTECH">Fintech</option>
+              </select>
             </div>
 
             {/* Contact Person */}

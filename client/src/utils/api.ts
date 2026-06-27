@@ -223,6 +223,9 @@ export async function getInvoiceByDatabaseId(id: string): Promise<ApiResponse> {
  */
 export async function downloadInvoicePDF(id: string): Promise<Blob> {
   const token = localStorage.getItem('token');
+  
+  console.log(`📥 Downloading PDF for invoice ID: ${id}`);
+  
   const response = await fetch(`${API_BASE_URL}/api/erp/invoices/${id}/pdf`, {
     method: 'GET',
     headers: {
@@ -230,12 +233,37 @@ export async function downloadInvoicePDF(id: string): Promise<Blob> {
     },
   });
 
+  console.log(`📥 PDF download response status: ${response.status}`);
+  console.log(`📥 PDF download response headers:`, Object.fromEntries(response.headers.entries()));
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Failed to download PDF' }));
-    throw new Error(errorData.error || 'Failed to download PDF');
+    let errorMessage = 'Failed to download PDF';
+    
+    try {
+      // Try to parse JSON error response
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+      console.error('❌ PDF download error response:', errorData);
+    } catch (parseError) {
+      // If JSON parsing fails, try to get text
+      try {
+        const errorText = await response.text();
+        console.error('❌ PDF download error text:', errorText);
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      } catch (textError) {
+        console.error('❌ Could not parse error response:', textError);
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
-  return response.blob();
+  const blob = await response.blob();
+  console.log(`✓ PDF downloaded successfully: ${blob.size} bytes`);
+  
+  return blob;
 }
 
 /**
@@ -334,30 +362,27 @@ export async function getLenderStatistics(lenderIdentifier?: string): Promise<Ap
 /**
  * Get lender dashboard statistics
  */
-export async function getLenderDashboardStats(lenderIdentifier?: string): Promise<ApiResponse> {
-  const query = lenderIdentifier ? `?lender_identifier=${lenderIdentifier}` : '';
-  return apiRequest(`/api/lender/dashboard/stats${query}`);
+export async function getLenderDashboardStats(): Promise<ApiResponse> {
+  // No longer needs lenderIdentifier - backend uses authenticated user
+  return apiRequest(`/api/financing/lender/statistics`);
 }
 
 /**
  * Get pending verification invoices for lender
  */
-export async function getLenderPendingInvoices(lenderIdentifier?: string, limit?: number): Promise<ApiResponse> {
-  const params = new URLSearchParams();
-  if (lenderIdentifier) params.append('lender_identifier', lenderIdentifier);
-  if (limit) params.append('limit', limit.toString());
-  const query = params.toString() ? `?${params.toString()}` : '';
-  return apiRequest(`/api/lender/invoices/pending${query}`);
+export async function getLenderPendingInvoices(limit?: number): Promise<ApiResponse> {
+  // No longer needs lenderIdentifier - backend uses authenticated user
+  // This now calls the main lender invoices endpoint which returns all financing requests
+  const query = limit ? `?limit=${limit}` : '';
+  return apiRequest(`/api/financing/lender/invoices${query}`);
 }
 
 /**
  * Get recent lender activity
  */
-export async function getLenderActivity(lenderIdentifier?: string, limit?: number): Promise<ApiResponse> {
-  const params = new URLSearchParams();
-  if (lenderIdentifier) params.append('lender_identifier', lenderIdentifier);
-  if (limit) params.append('limit', limit.toString());
-  const query = params.toString() ? `?${params.toString()}` : '';
+export async function getLenderActivity(limit?: number): Promise<ApiResponse> {
+  // No longer needs lenderIdentifier - backend uses authenticated user
+  const query = limit ? `?limit=${limit}` : '';
   return apiRequest(`/api/lender/activity${query}`);
 }
 
@@ -371,6 +396,32 @@ export async function getAllLenderInvoices(lenderIdentifier?: string, status?: s
   if (limit) params.append('limit', limit.toString());
   const query = params.toString() ? `?${params.toString()}` : '';
   return apiRequest(`/api/lender/invoices${query}`);
+}
+
+/**
+ * Get portfolio statistics
+ */
+export async function getPortfolioStats(): Promise<ApiResponse> {
+  return apiRequest('/api/lender/portfolio/stats');
+}
+
+/**
+ * Get portfolio sector breakdown
+ */
+export async function getPortfolioSectors(): Promise<ApiResponse> {
+  return apiRequest('/api/lender/portfolio/sectors');
+}
+
+/**
+ * Get financed invoices for portfolio
+ */
+export async function getPortfolioInvoices(status?: string, limit?: number, offset?: number): Promise<ApiResponse> {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (limit) params.append('limit', limit.toString());
+  if (offset) params.append('offset', offset.toString());
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiRequest(`/api/lender/portfolio/invoices${query}`);
 }
 /**
  * Get invoice details by GIID for lender verification

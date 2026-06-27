@@ -409,18 +409,24 @@ class ERPController {
       const { id } = req.params;
       const msmeId = req.user.id;
 
+      console.log(`📥 PDF Download Request - Invoice ID: ${id}, MSME ID: ${msmeId}`);
+
       // Get invoice details
       const invoice = await InvoiceModel.findById(id);
 
       if (!invoice) {
+        console.error(`❌ Invoice not found - ID: ${id}`);
         return res.status(404).json({
           success: false,
           error: 'Invoice not found',
         });
       }
 
+      console.log(`✓ Invoice found: ${invoice.invoice_number}`);
+
       // Verify ownership
       if (invoice.msme_id !== msmeId && req.user.role !== 'admin') {
+        console.error(`❌ Permission denied - Invoice MSME ID: ${invoice.msme_id}, User MSME ID: ${msmeId}`);
         return res.status(403).json({
           success: false,
           error: 'PERMISSION_DENIED',
@@ -428,17 +434,25 @@ class ERPController {
         });
       }
 
+      console.log(`✓ Permission verified`);
+
       // Get ERP connection
-      const erpConnection = await ERPConnectionModel.findByMSME(msmeId);
-      if (!erpConnection) {
+      const erpConnections = await ERPConnectionModel.findByMSME(msmeId);
+      if (!erpConnections || erpConnections.length === 0) {
+        console.error(`❌ ERP connection not found for MSME ID: ${msmeId}`);
         return res.status(404).json({
           success: false,
           error: 'ERP connection not found',
+          message: 'Please configure your ERP connection first',
         });
       }
 
+      // Use the first active ERP connection
+      const erpConnection = erpConnections[0];
+      console.log(`✓ ERP connection found: ${erpConnection.erp_type}`);
+
       // Decrypt credentials
-      const decryptedPassword = EncryptionUtil.decrypt(erpConnection.password);
+      const decryptedPassword = EncryptionUtil.decrypt(erpConnection.encrypted_password);
 
       // Create ERP provider
       const provider = ERPFactory.createProvider(erpConnection.erp_type, {
@@ -448,9 +462,15 @@ class ERPController {
         password: decryptedPassword,
       });
 
+      console.log(`✓ ERP provider created`);
+
       // Download PDF from ERP
       const erpInvoiceId = invoice.erp_invoice_id || invoice.id;
+      console.log(`📥 Downloading PDF for ERP Invoice ID: ${erpInvoiceId}`);
+      
       const pdfBuffer = await provider.downloadInvoicePDF(erpInvoiceId);
+
+      console.log(`✓ PDF downloaded successfully: ${pdfBuffer.length} bytes`);
 
       // Set response headers for PDF download
       res.setHeader('Content-Type', 'application/pdf');
@@ -460,7 +480,7 @@ class ERPController {
       // Send PDF buffer
       res.send(pdfBuffer);
     } catch (error) {
-      console.error('Error downloading invoice PDF:', error);
+      console.error('❌ Error downloading invoice PDF:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to download invoice PDF',

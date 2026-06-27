@@ -23,9 +23,15 @@ const ODOO_USERNAME = process.env.ODOO_USERNAME;
 const ODOO_PASSWORD = process.env.ODOO_PASSWORD;
 
 class DocumentService {
-  constructor() {
+  constructor(config = {}) {
     this.ipfsService = new IPFSService();
     this.sessionCookie = null; // Cache session cookie
+    
+    // Use provided config or fall back to environment variables
+    this.odooUrl = config.baseUrl || ODOO_URL;
+    this.odooDb = config.database || ODOO_DB;
+    this.odooUsername = config.username || ODOO_USERNAME;
+    this.odooPassword = config.password || ODOO_PASSWORD;
   }
 
   /**
@@ -36,18 +42,18 @@ class DocumentService {
   async loginToOdoo() {
     try {
       console.log(`🔐 Authenticating with Odoo...`);
-      console.log(`   URL: ${ODOO_URL}`);
-      console.log(`   Database: ${ODOO_DB}`);
-      console.log(`   Username: ${ODOO_USERNAME}`);
+      console.log(`   URL: ${this.odooUrl}`);
+      console.log(`   Database: ${this.odooDb}`);
+      console.log(`   Username: ${this.odooUsername}`);
 
       const response = await axios.post(
-        `${ODOO_URL}/web/session/authenticate`,
+        `${this.odooUrl}/web/session/authenticate`,
         {
           jsonrpc: '2.0',
           params: {
-            db: ODOO_DB,
-            login: ODOO_USERNAME,
-            password: ODOO_PASSWORD
+            db: this.odooDb,
+            login: this.odooUsername,
+            password: this.odooPassword
           }
         },
         {
@@ -103,7 +109,7 @@ class DocumentService {
   async downloadInvoicePDF(invoiceId, sessionCookie) {
     try {
       // Odoo PDF report endpoint
-      const url = `${ODOO_URL}/report/pdf/account.report_invoice/${invoiceId}`;
+      const url = `${this.odooUrl}/report/pdf/account.report_invoice/${invoiceId}`;
 
       console.log(`📥 Downloading PDF from Odoo...`);
       console.log(`   URL: ${url}`);
@@ -404,7 +410,7 @@ class DocumentService {
    * @returns {boolean}
    */
   isConfigured() {
-    return !!(ODOO_URL && ODOO_USERNAME && ODOO_PASSWORD && this.ipfsService.isConfigured());
+    return !!(this.odooUrl && this.odooUsername && this.odooPassword && this.ipfsService.isConfigured());
   }
 }
 

@@ -100,10 +100,10 @@ class AuthService {
    * Register Lender user
    */
   async registerLender(userData) {
-    const { institution_name, contact_person, email, phone, license_number, password } = userData;
+    const { lender_name, lender_type, contact_person, email, phone, license_number, password } = userData;
 
     // Validate required fields
-    if (!institution_name || !contact_person || !email || !phone || !license_number || !password) {
+    if (!lender_name || !contact_person || !email || !phone || !license_number || !password) {
       throw new Error('All fields are required');
     }
 
@@ -118,7 +118,8 @@ class AuthService {
 
     // Create user
     const user = await userModels.createLenderUser({
-      institution_name,
+      lender_name,
+      lender_type: lender_type || 'BANK',
       contact_person,
       email,
       phone,

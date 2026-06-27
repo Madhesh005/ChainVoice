@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import StatCard from '../../components/StatCard';
-import { getLenderStatistics, getAllLenderInvoices } from '../../utils/api';
+import { getPortfolioStats, getPortfolioSectors, getPortfolioInvoices } from '../../utils/api';
 
 interface PortfolioStats {
   total_financed: number;
@@ -19,15 +19,24 @@ interface SectorBreakdown {
   percentage: number;
 }
 
+interface FinancedInvoice {
+  id: number;
+  invoice_number: string;
+  invoice_date: string;
+  buyer_name: string;
+  msme_company_name: string;
+  amount: number;
+  currency: string;
+  financing_status: string;
+  financed_date: string;
+}
+
 export default function Portfolio() {
   const [stats, setStats] = useState<PortfolioStats | null>(null);
   const [sectorData, setSectorData] = useState<SectorBreakdown[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<FinancedInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Get lender identifier from authenticated user
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const lenderIdentifier = user.lender_identifier || 'HDFC_BANK';
 
   useEffect(() => {
     fetchPortfolioData();
@@ -39,24 +48,23 @@ export default function Portfolio() {
       setError('');
 
       // Fetch portfolio statistics
-      const statsResponse = await getLenderStatistics(lenderIdentifier);
+      const [statsResponse, sectorsResponse, invoicesResponse] = await Promise.all([
+        getPortfolioStats(),
+        getPortfolioSectors(),
+        getPortfolioInvoices('APPROVED', 10) // Get recent 10 approved invoices
+      ]);
       
       if (statsResponse.success) {
-        // Map the response to our portfolio stats format
-        const statistics = statsResponse.statistics;
-        setStats({
-          total_financed: statistics.approved_amount || 0,
-          active_invoices: statistics.approved_requests || 0,
-          avg_interest_rate: 0, // Remove placeholder - will be calculated from real data
-          expected_returns: 0, // Remove placeholder - will be calculated from real data
-          default_rate: 0, // Remove placeholder - will be calculated from real data
-          avg_payment_days: 0, // Remove placeholder - will be calculated from real data
-        });
+        setStats(statsResponse.portfolio_stats);
       }
 
-      // For now, sector data would need to be calculated from invoice data
-      // This would require additional API endpoints to get sector breakdown
-      setSectorData([]);
+      if (sectorsResponse.success) {
+        setSectorData(sectorsResponse.sectors || []);
+      }
+
+      if (invoicesResponse.success) {
+        setRecentInvoices(invoicesResponse.invoices || []);
+      }
 
     } catch (err: any) {
       console.error('Error fetching portfolio data:', err);
@@ -136,35 +144,74 @@ export default function Portfolio() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 card">
-            <h3 className="font-display text-xl font-bold mb-4">Portfolio Breakdown</h3>
-            
-            {sectorData.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <p className="mb-2">No portfolio data available</p>
-                <p className="text-sm text-gray-500">Portfolio breakdown will appear here as you finance more invoices</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {sectorData.map((sector) => (
-                  <div key={sector.sector}>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">{sector.sector}</span>
-                      <span className="text-gray-400">{sector.count} invoices · {formatAmount(sector.amount)}</span>
+          <div className="lg:col-span-2 space-y-6">
+            <div className="card">
+              <h3 className="font-display text-xl font-bold mb-4">Portfolio Breakdown</h3>
+              
+              {sectorData.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <p className="mb-2">No portfolio data available</p>
+                  <p className="text-sm text-gray-500">Portfolio breakdown will appear here as you finance more invoices</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sectorData.map((sector) => (
+                    <div key={sector.sector}>
+                      <div className="flex justify-between mb-2">
+                        <span className="font-medium">{sector.sector}</span>
+                        <span className="text-gray-400">{sector.count} invoices · {formatAmount(sector.amount)}</span>
+                      </div>
+                      <div className="w-full bg-navy-lighter rounded-full h-2">
+                        <div 
+                          className="bg-cyan h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${sector.percentage}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-navy-lighter rounded-full h-2">
-                      <div 
-                        className="bg-cyan h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${sector.percentage}%` }}
-                      ></div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="card">
+              <h3 className="font-display text-xl font-bold mb-4">Recent Financed Invoices</h3>
+              
+              {recentInvoices.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-sm">No financed invoices yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentInvoices.map((invoice) => (
+                    <div key={invoice.id} className="flex items-center justify-between p-3 bg-navy rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-cyan/10 rounded-full flex items-center justify-center">
+                            <span className="text-cyan text-sm">📄</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">{invoice.invoice_number}</p>
+                            <p className="text-sm text-gray-400">{invoice.msme_company_name} → {invoice.buyer_name}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-cyan">{formatAmount(invoice.amount)}</p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(invoice.financed_date).toLocaleDateString('en-IN')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-6">

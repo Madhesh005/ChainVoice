@@ -228,7 +228,7 @@ class InvoiceModel {
     const query = `
       UPDATE invoices
       SET giid = COALESCE($2, giid),
-          ipfs_cid = COALESCE($3, ipfs_cid),
+          ipfs_hash = COALESCE($3, ipfs_hash),
           document_hash = COALESCE($4, document_hash),
           blockchain_status = COALESCE($5, blockchain_status),
           blockchain_tx_hash = COALESCE($6, blockchain_tx_hash),
@@ -242,7 +242,7 @@ class InvoiceModel {
     const result = await db.query(query, [
       id,
       giid,
-      ipfs_cid,
+      ipfs_cid, // Parameter name stays same, but maps to ipfs_hash column
       document_hash,
       blockchain_status,
       blockchain_tx_hash,
@@ -270,7 +270,7 @@ class InvoiceModel {
     const query = `
       UPDATE invoices
       SET giid = COALESCE($2, giid),
-          ipfs_cid = COALESCE($3, ipfs_cid),
+          ipfs_hash = COALESCE($3, ipfs_hash),
           document_hash = COALESCE($4, document_hash),
           blockchain_status = COALESCE($5, blockchain_status),
           blockchain_tx_hash = COALESCE($6, blockchain_tx_hash),
@@ -284,7 +284,7 @@ class InvoiceModel {
     const result = await db.query(query, [
       erp_invoice_id.toString(),
       giid,
-      ipfs_cid,
+      ipfs_cid, // Parameter name stays same, but maps to ipfs_hash column
       document_hash,
       blockchain_status,
       blockchain_tx_hash,

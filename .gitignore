@@ -190,3 +190,19 @@ bower_components
 # Lock files (optional - uncomment if you want to ignore them)
 # package-lock.json
 # yarn.lock
+
+wallet/
+.env
+.env.*
+dist/
+build/
+
+fabric-samples/test-network/organizations/
+fabric-samples/test-network/system-genesis-block/
+fabric-samples/test-network/channel-artifacts/
+
+*.log
+
+coverage/
+
+tmp/
