@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { getLenderInvoiceByGIID, approveInvoice, rejectInvoice, getUser, apiRequest } from '../../utils/api';
+import { getLenderInvoiceByGIIDTyped, approveInvoice, rejectInvoice, getBlockchainIdentityTyped } from '../../utils/api';
 
 interface InvoiceData {
   giid: string;
@@ -49,9 +49,6 @@ export default function Verify() {
   });
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const user = getUser();
-  const lenderIdentifier = user?.lender_identifier || 'HDFC_BANK'; // TODO: Get from user mapping
-
   useEffect(() => {
     if (!giid) {
       setError('Invoice GIID not provided');
@@ -69,10 +66,10 @@ export default function Verify() {
 
       console.log(`Fetching invoice details for GIID: ${giid}`);
 
-      const response = await getLenderInvoiceByGIID(giid!);
+      const response = await getLenderInvoiceByGIIDTyped(giid!);
 
       if (response.success && response.invoice) {
-        setInvoice(response.invoice);
+        setInvoice(response.invoice as unknown as InvoiceData);
       } else {
         setError(response.message || 'Failed to load invoice details');
       }
@@ -182,7 +179,7 @@ export default function Verify() {
       
       try {
         console.log(`🔍 Checking blockchain status for GIID: ${invoice.giid}`);
-        const identityResponse = await apiRequest(`/identity/${invoice.giid}`);
+        const identityResponse = await getBlockchainIdentityTyped(invoice.giid);
         console.log('📋 Blockchain response:', identityResponse);
         
         if (!identityResponse.success) {
@@ -308,10 +305,6 @@ export default function Verify() {
     } finally {
       setProcessing(false);
     }
-  };
-
-  const handleChecklistChange = (index: number) => {
-    // Disabled - verification is now automated
   };
 
   const getVerificationIcon = (status: VerificationStatus) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { getLenderInvoiceByGIID } from '../../utils/api';
+import { getLenderInvoiceByGIIDTyped } from '../../utils/api';
 
 interface InvoiceData {
   giid: string;
@@ -34,10 +34,10 @@ export default function Disburse() {
   const fetchInvoiceDetails = async () => {
     try {
       setLoading(true);
-      const response = await getLenderInvoiceByGIID(giid!);
+      const response = await getLenderInvoiceByGIIDTyped(giid!);
       
       if (response.success && response.invoice) {
-        setInvoice(response.invoice);
+        setInvoice(response.invoice as unknown as InvoiceData);
       } else {
         setError(response.message || 'Failed to load invoice details');
       }

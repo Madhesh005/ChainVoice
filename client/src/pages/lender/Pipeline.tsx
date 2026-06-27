@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getLenderInvoices } from '../../utils/api';
+import type { InvoicesResponse } from '../../utils/api';
 
 interface PipelineStats {
   pending_review: number;
@@ -48,11 +49,11 @@ export default function Pipeline() {
       setError('');
 
       // Fetch all lender invoices
-      const response = await getLenderInvoices(lenderIdentifier);
+      const response = await getLenderInvoices(lenderIdentifier) as InvoicesResponse;
       
-      if (response.success) {
-        const invoiceData = response.invoices || [];
-        setInvoices(invoiceData);
+      if (response.success && response.invoices) {
+        const invoiceData = response.invoices;
+        setInvoices(invoiceData as PipelineInvoice[]);
 
         // Calculate stats from the data
         const stats = invoiceData.reduce((acc: PipelineStats, invoice: any) => {

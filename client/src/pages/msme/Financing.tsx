@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { getInvoices } from '../../utils/api';
+import { getInvoicesTyped } from '../../utils/api';
 
 interface Invoice {
   id: number;
@@ -27,17 +27,17 @@ export default function Financing() {
     try {
       setLoading(true);
       // Fetch only posted invoices for financing
-      const response = await getInvoices();
+      const response = await getInvoicesTyped();
       
-      if (response.success) {
-        const allInvoices = response.invoices || [];
+      if (response.success && response.invoices) {
+        const allInvoices = response.invoices;
         // Filter only posted invoices (ready for financing)
-        const postedInvoices = allInvoices.filter((inv: Invoice) => 
-          inv.status.toLowerCase() === 'posted'
+        const postedInvoices = allInvoices.filter((inv) => 
+          inv.status?.toLowerCase() === 'posted'
         );
-        setVerifiedInvoices(postedInvoices);
+        setVerifiedInvoices(postedInvoices as Invoice[]);
         if (postedInvoices.length > 0) {
-          setSelectedInvoice(postedInvoices[0]);
+          setSelectedInvoice(postedInvoices[0] as Invoice);
           setFinancingAmount(Math.floor(postedInvoices[0].amount * 0.8)); // 80% of invoice value
         }
       } else {

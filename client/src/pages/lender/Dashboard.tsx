@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import StatCard from '../../components/StatCard';
-import { getLenderDashboardStats, getLenderPendingInvoices, getLenderActivity } from '../../utils/api';
+import { getLenderDashboardStatsTyped, getLenderPendingInvoicesTyped, getLenderActivityTyped } from '../../utils/api';
 
 interface DashboardStats {
   pending_verification: number;
@@ -65,31 +65,31 @@ export default function LenderDashboard() {
 
       // Fetch all data in parallel - no lenderIdentifier needed (uses authenticated user)
       const [statsResponse, invoicesResponse, activityResponse] = await Promise.all([
-        getLenderDashboardStats(),
-        getLenderPendingInvoices(5),
-        getLenderActivity(5),
+        getLenderDashboardStatsTyped(),
+        getLenderPendingInvoicesTyped(5),
+        getLenderActivityTyped(5),
       ]);
 
-      if (statsResponse.success) {
+      if (statsResponse.success && statsResponse.statistics) {
         console.log('📊 Stats response:', statsResponse);
-        setStats(statsResponse.statistics);
+        setStats(statsResponse.statistics as DashboardStats);
       } else {
         console.error('❌ Stats response failed:', statsResponse);
       }
 
-      if (invoicesResponse.success) {
+      if (invoicesResponse.success && invoicesResponse.invoices) {
         console.log('📋 Invoices response:', invoicesResponse);
         // Filter only PENDING status invoices for the dashboard
-        const allInvoices = invoicesResponse.invoices || [];
-        const pending = allInvoices.filter((inv: any) => inv.request_status === 'PENDING');
-        setPendingInvoices(pending.slice(0, 5)); // Limit to 5 for dashboard
+        const allInvoices = invoicesResponse.invoices;
+        const pending = allInvoices.filter((inv) => inv.request_status === 'PENDING');
+        setPendingInvoices(pending.slice(0, 5) as Invoice[]); // Limit to 5 for dashboard
       } else {
         console.error('❌ Invoices response failed:', invoicesResponse);
       }
 
-      if (activityResponse.success) {
+      if (activityResponse.success && activityResponse.activities) {
         console.log('📈 Activity response:', activityResponse);
-        setRecentActivity(activityResponse.activities || []);
+        setRecentActivity(activityResponse.activities as Activity[]);
       } else {
         console.error('❌ Activity response failed:', activityResponse);
       }
@@ -272,7 +272,7 @@ export default function LenderDashboard() {
                       <p className="text-xs text-gray-500 break-words">{activity.description}</p>
                     </div>
                     <div className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
-                      {formatTimeAgo(activity.created_at || activity.timestamp)}
+                      {formatTimeAgo(activity.created_at || activity.timestamp || '')}
                     </div>
                   </div>
                 ))}

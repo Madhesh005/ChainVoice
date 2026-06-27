@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getMSMEDashboard } from '../../utils/api';
+import type { DashboardResponse } from '../../utils/api';
 
 interface DashboardData {
   company_name: string;
@@ -51,13 +52,13 @@ export default function MsmeDashboard() {
       setError('');
       
       console.log('Fetching dashboard data...');
-      const response = await getMSMEDashboard();
+      const response: DashboardResponse = await getMSMEDashboard();
       
       console.log('Dashboard response:', response);
       console.log('Dashboard data:', response.data);
       console.log('Recent activities:', response.data?.recent_activities);
       
-      if (response.success) {
+      if (response.success && response.data) {
         setDashboardData(response.data);
       } else {
         setError(response.message || 'Failed to load dashboard data');
@@ -329,8 +330,8 @@ function ActivityTimeline({ activities = [] }: { activities?: DashboardData['rec
         </div>
       ) : (
         <div className="space-y-4">
-          {activities.map((activity, index) => {
-            const { icon, color, bg } = getActivityIcon(activity.type);
+          {activities.map((activity) => {
+            const { icon, bg } = getActivityIcon(activity.type);
             return (
               <div key={activity.id} className="flex items-start space-x-3">
                 <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 text-lg`}>
@@ -348,9 +349,6 @@ function ActivityTimeline({ activities = [] }: { activities?: DashboardData['rec
                   )}
                   <p className="text-xs text-gray-500 mt-1">{formatTimeAgo(activity.created_at)}</p>
                 </div>
-                {index < activities.length - 1 && (
-                  <div className="absolute left-8 top-12 w-0.5 h-full bg-navy-lighter -z-10" />
-                )}
               </div>
             );
           })}

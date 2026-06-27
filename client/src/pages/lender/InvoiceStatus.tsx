@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { getLenderInvoiceByGIID, getUser, apiRequest } from '../../utils/api';
+import { getLenderInvoiceByGIID, apiRequest } from '../../utils/api';
 
 interface InvoiceData {
   giid: string;
@@ -39,8 +39,6 @@ export default function InvoiceStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-
-  const user = getUser();
 
   useEffect(() => {
     if (!giid) {

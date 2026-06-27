@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { getERPConnections, apiRequest, disconnectERP } from '../../utils/api';
+import { getERPConnectionsTyped, connectERPTyped, disconnectERP } from '../../utils/api';
 
 interface ERPConnection {
   id: number;
@@ -37,10 +37,10 @@ export default function ERPConnection() {
     try {
       setLoading(true);
       setError('');
-      const response = await getERPConnections();
+      const response = await getERPConnectionsTyped();
       
-      if (response.success) {
-        setConnections(response.connections || []);
+      if (response.success && response.connections) {
+        setConnections(response.connections as ERPConnection[]);
       } else {
         setError(response.message || 'Failed to load ERP connections');
       }
@@ -59,15 +59,12 @@ export default function ERPConnection() {
     setSuccess('');
 
     try {
-      const response = await apiRequest('/api/erp/connect', {
-        method: 'POST',
-        body: JSON.stringify({
-          erpType: 'odoo',
-          baseUrl: formData.baseUrl,
-          database: formData.database,
-          username: formData.username,
-          password: formData.password
-        })
+      const response = await connectERPTyped({
+        erpType: 'odoo',
+        baseUrl: formData.baseUrl,
+        database: formData.database,
+        username: formData.username,
+        password: formData.password
       });
 
       if (response.success) {

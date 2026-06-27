@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import StatCard from '../../components/StatCard';
-import { getPortfolioStats, getPortfolioSectors, getPortfolioInvoices } from '../../utils/api';
+import { getPortfolioStatsTyped, getPortfolioSectorsTyped, getPortfolioInvoicesTyped } from '../../utils/api';
 
 interface PortfolioStats {
   total_financed: number;
@@ -49,21 +49,21 @@ export default function Portfolio() {
 
       // Fetch portfolio statistics
       const [statsResponse, sectorsResponse, invoicesResponse] = await Promise.all([
-        getPortfolioStats(),
-        getPortfolioSectors(),
-        getPortfolioInvoices('APPROVED', 10) // Get recent 10 approved invoices
+        getPortfolioStatsTyped(),
+        getPortfolioSectorsTyped(),
+        getPortfolioInvoicesTyped('APPROVED', 10) // Get recent 10 approved invoices
       ]);
       
-      if (statsResponse.success) {
-        setStats(statsResponse.portfolio_stats);
+      if (statsResponse.success && statsResponse.portfolio_stats) {
+        setStats(statsResponse.portfolio_stats as PortfolioStats);
       }
 
-      if (sectorsResponse.success) {
-        setSectorData(sectorsResponse.sectors || []);
+      if (sectorsResponse.success && sectorsResponse.sectors) {
+        setSectorData(sectorsResponse.sectors as SectorBreakdown[]);
       }
 
-      if (invoicesResponse.success) {
-        setRecentInvoices(invoicesResponse.invoices || []);
+      if (invoicesResponse.success && invoicesResponse.invoices) {
+        setRecentInvoices(invoicesResponse.invoices as FinancedInvoice[]);
       }
 
     } catch (err: any) {
@@ -132,14 +132,14 @@ export default function Portfolio() {
           />
           <StatCard 
             title="Avg. Interest Rate" 
-            value={stats?.avg_interest_rate > 0 ? `${stats.avg_interest_rate.toFixed(1)}%` : 'N/A'} 
+            value={(stats?.avg_interest_rate && stats.avg_interest_rate > 0) ? `${stats.avg_interest_rate.toFixed(1)}%` : 'N/A'} 
             icon="📈" 
           />
           <StatCard 
             title="Expected Returns" 
-            value={stats?.expected_returns > 0 ? formatAmount(stats.expected_returns) : 'N/A'} 
+            value={(stats?.expected_returns && stats.expected_returns > 0) ? formatAmount(stats.expected_returns) : 'N/A'} 
             icon="💵" 
-            trend={stats && stats.expected_returns > 0 ? 'up' : undefined}
+            trend={stats && stats.expected_returns && stats.expected_returns > 0 ? 'up' : undefined}
           />
         </div>
 
@@ -220,11 +220,11 @@ export default function Portfolio() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Default Rate</span>
-                  <span className="font-bold text-emerald">{stats?.default_rate > 0 ? `${stats.default_rate.toFixed(1)}%` : 'N/A'}</span>
+                  <span className="font-bold text-emerald">{(stats?.default_rate && stats.default_rate > 0) ? `${stats.default_rate.toFixed(1)}%` : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Avg. Days to Payment</span>
-                  <span className="font-bold">{stats?.avg_payment_days > 0 ? stats.avg_payment_days : 'N/A'}</span>
+                  <span className="font-bold">{(stats?.avg_payment_days && stats.avg_payment_days > 0) ? stats.avg_payment_days : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Portfolio Diversity</span>

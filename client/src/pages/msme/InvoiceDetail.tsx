@@ -2,6 +2,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getInvoiceDetails, registerInvoiceIdentity, getAvailableLenders, requestFinancing } from '../../utils/api';
+import type { InvoiceDetailResponse } from '../../utils/api';
 
 interface Invoice {
   id: number;
@@ -71,7 +72,7 @@ export default function InvoiceDetail() {
 
   const fetchAvailableLenders = async () => {
     try {
-      const response = await getAvailableLenders();
+      const response: InvoiceDetailResponse = await getAvailableLenders();
       if (response.success && response.data?.lenders) {
         setAvailableLenders(response.data.lenders);
       }
@@ -84,7 +85,7 @@ export default function InvoiceDetail() {
     try {
       setLoading(true);
       setError(null);
-      const response = await getInvoiceDetails(id!);
+      const response: InvoiceDetailResponse = await getInvoiceDetails(id!);
       
       if (response.success && response.data?.invoice) {
         setInvoice(response.data.invoice);
@@ -119,7 +120,7 @@ export default function InvoiceDetail() {
 
         console.log(`Registering invoice identity for ERP Invoice ID: ${erpInvoiceId}`);
 
-        const response = await registerInvoiceIdentity(erpInvoiceId);
+        const response: InvoiceDetailResponse = await registerInvoiceIdentity(erpInvoiceId);
 
         if (response.data?.giid) {
           // Success - update invoice with new data

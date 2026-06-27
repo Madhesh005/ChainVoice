@@ -50,8 +50,7 @@ export default function LenderRegister() {
 
     try {
       const response = await registerLender({
-        lender_name: formData.lender_name,
-        lender_type: formData.lender_type,
+        institution_name: formData.lender_name,
         contact_person: formData.contact_person,
         email: formData.email,
         phone: formData.phone,
